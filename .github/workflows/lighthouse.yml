@@ -1,0 +1,86 @@
+name: Lighthouse
+on: 
+  pull_request:
+    types: 
+      - opened
+      - closed
+      - reopened
+      - synchronize
+jobs:
+  build_and_test_lighthouse:
+    name: Build and Test (Lighthouse).
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == false && github.event.action != 'closed'
+    steps:
+    -
+      uses: actions/checkout@v3
+    -
+      name: Build docker image
+      run: docker build -t example:${{github.sha}} ${{ github.workspace }}
+    -
+      name: Start docker container
+      run: docker run -d -p 8080:80 example:${{github.sha}}
+    - 
+      name: Create artifacts directory
+      run: mkdir -p ${{ github.workspace }}/tmp/artifacts/desktop && mkdir -p ${{ github.workspace }}/tmp/artifacts/mobile
+    -
+      name: Wait for fastboot to load
+      run: sleep 20 && curl http://localhost:8080/
+    -
+      name: Lighthouse Desktop
+      id: lighthouse-desktop
+      uses: foo-software/lighthouse-check-action@v9.1.0
+      with:
+        maxRetries: 5
+        outputDirectory: ${{ github.workspace }}/tmp/artifacts/desktop
+        device: desktop
+        urls: >-
+          http://localhost:8080/modern/,
+          http://localhost:8080/modern/blog-home.html,
+          http://localhost:8080/modern/blog-post.html,
+          http://localhost:8080/modern/contact.html,
+          http://localhost:8080/modern/faq.html,
+          http://localhost:8080/freelancer/,
+          http://localhost:8080/portfolio/,
+          http://localhost:8080/shop/
+    -
+      name: Lighthouse Mobile
+      id: lighthouse-mobile
+      uses: foo-software/lighthouse-check-action@v9.1.0
+      with:
+        maxRetries: 5
+        outputDirectory: ${{ github.workspace }}/tmp/artifacts/mobile
+        device: mobile
+        urls: >-
+          http://localhost:8080/modern/,
+          http://localhost:8080/modern/blog-home.html,
+          http://localhost:8080/modern/blog-post.html,
+          http://localhost:8080/modern/contact.html,
+          http://localhost:8080/modern/faq.html,
+          http://localhost:8080/freelancer/,
+          http://localhost:8080/portfolio/,
+          http://localhost:8080/shop/
+    -
+      name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: Lighthouse reports
+        path: ${{ github.workspace }}/tmp/artifacts
+    -
+      name: Verify Desktop Lighthouse results
+      uses: foo-software/lighthouse-check-status-action@v2.0.1
+      with:
+        lighthouseCheckResults: ${{ steps.lighthouse-desktop.outputs.lighthouseCheckResults }}
+        minAccessibilityScore: "70"
+        minBestPracticesScore: "70"
+        minPerformanceScore: "93"
+        minSeoScore: "70"
+    -
+      name: Verify Mobile Lighthouse results
+      uses: foo-software/lighthouse-check-status-action@v2.0.1
+      with:
+        lighthouseCheckResults: ${{ steps.lighthouse-mobile.outputs.lighthouseCheckResults }}
+        minAccessibilityScore: "70"
+        minBestPracticesScore: "70"
+        minPerformanceScore: "77"
+        minSeoScore: "70"
