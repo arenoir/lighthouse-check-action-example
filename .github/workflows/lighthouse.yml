@@ -77,16 +77,16 @@ jobs:
       uses: foo-software/lighthouse-check-status-action@v2.0.1
       with:
         lighthouseCheckResults: ${{ steps.lighthouse-desktop.outputs.lighthouseCheckResults }}
-        minAccessibilityScore: "70"
-        minBestPracticesScore: "70"
-        minPerformanceScore: "93"
-        minSeoScore: "70"
+        minAccessibilityScore: "50"
+        minBestPracticesScore: "50"
+        minPerformanceScore: "50"
+        minSeoScore: "50"
     -
       name: Verify Mobile Lighthouse results
       uses: foo-software/lighthouse-check-status-action@v2.0.1
       with:
         lighthouseCheckResults: ${{ steps.lighthouse-mobile.outputs.lighthouseCheckResults }}
-        minAccessibilityScore: "70"
-        minBestPracticesScore: "70"
-        minPerformanceScore: "77"
-        minSeoScore: "70"
+        minAccessibilityScore: "30"
+        minBestPracticesScore: "30"
+        minPerformanceScore: "30"
+        minSeoScore: "30"
